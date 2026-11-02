@@ -1,0 +1,25 @@
+name = "Truss"
+version = "0.1.0"
+keywords = ["math"]
+defaultTargets = ["Truss.Transfer"]
+
+[leanOptions]
+pp.unicode.fun = true # pretty-prints `fun a ↦ b`
+relaxedAutoImplicit = false
+weak.linter.mathlibStandardSet = true
+maxSynthPendingDepth = 3
+
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+rev = "v4.28.0"
+
+[[require]]
+scope = "leanprover"
+name = "doc-gen4"
+# If you are developing against a release candidate or a stable version `v4.x`, replace `main` below by `v4.x`.
+# If you do not use `main` keep in mind to update this field as you update your Lean version.
+rev = "v4.28.0"
+
+[[lean_lib]]
+name = "Truss"

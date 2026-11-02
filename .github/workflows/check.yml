@@ -1,0 +1,17 @@
+name: Check Lean proofs
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      TMPDIR: ${{ github.workspace }}/scratch/tmp
+    steps:
+      - uses: actions/checkout@v4
+      - run: mkdir -p scratch/tmp
+      - uses: leanprover/lean-action@v1
+        with:
+          build: 'true'
+          test: 'false'
+      - run: lake env lean CheckAxioms.lean

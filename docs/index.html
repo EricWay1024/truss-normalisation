@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Truss normalisation — Lean verification</title>
+<style>body{max-width:48rem;margin:3rem auto;padding:0 1.2rem;font:18px/1.65 system-ui;color:#203040}a{color:#165fa1}pre{padding:1rem;background:#f0f4f7;overflow:auto}h1{line-height:1.2}small{color:#526374}</style>
+<h1>Truss normalisation</h1>
+<p>A standalone Lean 4 development of labelled open-truss normalisation, by Yuhang Wei.</p>
+<p><a href="https://github.com/EricWay1024/truss-normalisation">Source and reading guide</a> · <a href="https://github.com/EricWay1024/truss-normalisation/actions">Build checks</a> · <a href="https://github.com/EricWay1024/truss-normalisation/releases">Releases</a></p>
+<h2>Read the development</h2>
+<ul>
+<li><a href="https://github.com/EricWay1024/truss-normalisation/blob/main/Truss/Transfer/Normalisation/Descent.lean">Poset coarsenings and label descent</a></li>
+<li><a href="https://github.com/EricWay1024/truss-normalisation/blob/main/Truss/Transfer/Normalisation/Retained.lean">Retained singular points</a></li>
+<li><a href="https://github.com/EricWay1024/truss-normalisation/blob/main/Truss/Transfer/Normalisation/BundleNorm.lean">Bundle normalisation</a></li>
+<li><a href="https://github.com/EricWay1024/truss-normalisation/blob/main/Truss/Transfer/Normalisation/SuccNormalising.lean">Successor criterion</a></li>
+<li><a href="https://github.com/EricWay1024/truss-normalisation/blob/main/Truss/Transfer/Normalisation/RecursiveNorm.lean">Recursive normalisation and its universal property</a></li>
+<li><a href="https://github.com/EricWay1024/truss-normalisation/blob/main/Truss/Transfer/Audit/Chapter3.lean">Exact-typed theorem witnesses</a></li>
+</ul>
+<h2>Reproduce the check</h2>
+<p>With <a href="https://github.com/leanprover/elan">elan</a> installed:</p>
+<pre>git clone https://github.com/EricWay1024/truss-normalisation
+cd truss-normalisation
+lake exe cache get
+lake build
+lake env lean CheckAxioms.lean</pre>
+<p>Lean and Mathlib are pinned to v4.28.0. The axiom check rejects dependencies outside <code>propext</code>, <code>Classical.choice</code> and <code>Quot.sound</code> for all theorems in <code>Truss.Transfer</code>.</p>
+<h2>What this checks</h2>
+<p>The formal statements in the linked files, with their stated hypotheses. This is not a verification of the C++ implementation or every sentence of the current manuscript, and its noncomputable constructions are not an executable normaliser. Historical audit labels refer to an earlier draft; a fresh manuscript-correspondence review is separate work.</p>
+<p><small>Apache 2.0. Proof-file hashes and the extraction source revision are recorded in SOURCE.json.</small></p>
+</html>
