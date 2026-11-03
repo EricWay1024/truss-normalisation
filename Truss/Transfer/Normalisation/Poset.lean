@@ -5,6 +5,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 import Mathlib.Order.Category.FinPartOrd
 import Mathlib.CategoryTheory.Category.Preorder
 import Mathlib.Order.Hom.Basic
+import Mathlib.Order.Fin.Basic
 
 /-!
 # The poset preamble of the draft normalisation chapter (§5.1)
@@ -142,6 +143,44 @@ theorem isOpenPosetMap_iff_exists_le {q : P → Q} (hq : Monotone q) :
 theorem IsOpenPosetMap.exists_le {q : P →o Q} (h : IsOpenPosetMap q) {y : P} {z : Q}
     (hz : z ≤ q y) : ∃ x ≤ y, q x = z :=
   (isOpenPosetMap_iff_exists_le q.monotone).1 h y z hz
+
+/-- **`lem:draft-poset-coarsening-basics` (3), using only openness.** A monotone
+finite chain has a monotone lift with any prescribed last element over its last value.
+Lift the penultimate value below the prescribed endpoint and induct on the prefix. -/
+theorem IsOpenPosetMap.exists_monotone_lift {q : P →o Q} (hq : IsOpenPosetMap q)
+    {n : ℕ} (y : Fin (n + 1) → Q) (hy : Monotone y) (last : P)
+    (hlast : q last = y (Fin.last n)) :
+    ∃ x : Fin (n + 1) → P, Monotone x ∧ x (Fin.last n) = last ∧ ∀ i, q (x i) = y i := by
+  induction n generalizing last with
+  | zero =>
+    refine ⟨fun _ => last, fun _ _ _ => le_rfl, rfl, ?_⟩
+    intro i
+    simpa only [Fin.eq_zero i, Fin.last_zero] using hlast
+  | succ n ih =>
+    obtain ⟨prev, hprev, hqprev⟩ := hq.exists_le
+      (y := last) (z := y (Fin.last n).castSucc)
+      (by rw [hlast]; exact hy (Fin.le_last _))
+    obtain ⟨x, hx, hxlast, hqx⟩ := ih (fun i => y i.castSucc)
+      (fun i j hij => hy (Fin.castSucc_le_castSucc_iff.mpr hij)) prev hqprev
+    refine ⟨Fin.snoc x last, ?_, Fin.snoc_last _ _, ?_⟩
+    · intro i j
+      refine Fin.lastCases ?_ (fun j => ?_) j
+      · intro _
+        refine Fin.lastCases ?_ (fun i => ?_) i
+        · exact le_rfl
+        · simpa only [Fin.snoc_castSucc, Fin.snoc_last] using
+            (hx (Fin.le_last i)).trans (hxlast ▸ hprev)
+      · refine Fin.lastCases ?_ (fun i => ?_) i
+        · intro hij
+          have := j.isLt
+          simp only [Fin.le_def, Fin.val_last, Fin.val_castSucc] at hij
+          omega
+        · intro hij
+          simpa only [Fin.snoc_castSucc] using hx (Fin.castSucc_le_castSucc_iff.mp hij)
+    · intro i
+      refine Fin.lastCases ?_ (fun i => ?_) i
+      · simpa only [Fin.snoc_last] using hlast
+      · simpa only [Fin.snoc_castSucc] using hqx i
 
 /-- Identity maps are open. -/
 theorem isOpenPosetMap_id : IsOpenPosetMap (id : P → P) := by
@@ -299,6 +338,22 @@ theorem IsPosetCoarsening.arrowFibre_nonempty {q : P →o Q} (hq : IsPosetCoarse
   obtain ⟨t, ht⟩ := hq.surjective y'
   obtain ⟨s, hst, hs⟩ := hq.isOpen.exists_le (y := t) (z := y) (by rw [ht]; exact h)
   exact ⟨⟨s, t, hst⟩, hs, ht⟩
+
+/-- **`lem:draft-poset-coarsening-basics` (1), arrows.** Every arrow has a lift:
+choose a preimage of its target and use openness to lift its source below it. -/
+theorem IsPosetCoarsening.arr_surjective {q : P →o Q} (hq : IsPosetCoarsening q) :
+    Function.Surjective (Arr.map q) := by
+  intro a
+  obtain ⟨b, hb⟩ := hq.arrowFibre_nonempty a.le
+  exact ⟨b, Arr.ext hb.1 hb.2⟩
+
+/-- **`lem:draft-poset-coarsening-basics` (3).** Lift every finite chain through a
+poset coarsening, fixing its prescribed last element. No finiteness of the posets is needed. -/
+theorem IsPosetCoarsening.exists_monotone_lift {q : P →o Q} (hq : IsPosetCoarsening q)
+    {n : ℕ} (y : Fin (n + 1) → Q) (hy : Monotone y) (last : P)
+    (hlast : q last = y (Fin.last n)) :
+    ∃ x : Fin (n + 1) → P, Monotone x ∧ x (Fin.last n) = last ∧ ∀ i, q (x i) = y i :=
+  hq.isOpen.exists_monotone_lift y hy last hlast
 
 /-- Point fibres of a poset coarsening are nonempty. -/
 theorem IsPosetCoarsening.pointFibre_nonempty {q : P →o Q} (hq : IsPosetCoarsening q) (y : Q) :

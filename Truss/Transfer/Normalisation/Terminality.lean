@@ -3,6 +3,7 @@ Copyright (c) 2026 Yuhang Wei. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 -/
 import Truss.Transfer.Normalisation.Context
+import Mathlib.CategoryTheory.Limits.Shapes.IsTerminal
 
 /-!
 # Normalising coarsenings and normal objects (§5.2)
@@ -27,6 +28,10 @@ This module formalises the terminality half of the draft normalisation chapter's
 * `normalising_precomp` — `lem:draft-normalisation-precomposition`, with the source's
   existence hypothesis kept explicit.
 * `IsNormalising.target_isNormal` — `The target of a normalising coarsening is normal`.
+* `IsNormalising.comp_isCoarsening` — `prop:draft-terminal-factors` (2).
+* `LabOutCoarse.isNormalising_iff_nonempty_isTerminal` — normalising coarsenings are exactly
+  the terminal objects of `OutCoarse(X, L)`.
+* `isCoarsening_eqToHom`, `isCoarsening_labEqToHom`, `isNormalising_congr` — transport.
   Its converse is *not* asserted; see the module note.
 
 ## Note on the unasserted converse
@@ -184,5 +189,70 @@ theorem normalising_precomp {A B D : LabObj.{u, v, w, u₂, v₂} n K C} {a : A 
     · refine IsNormalising.mediator_unique hr (m := m) (m' := k ≫ h') ?_
       rw [← hm.2, ← Category.assoc, ← hqk, hqe, Category.assoc, hdh, Category.assoc, hhh',
         Category.comp_id]
+
+/-! ### Transport and postcomposition
+
+Factored out of `SuccNormalising.lean` and `RecursiveNorm.lean` (2026-09-26) so that the
+reflection-based §5.5 proofs can use them without importing a superseded capstone. -/
+
+
+/-- The canonical comparison of equal objects is a coarsening. -/
+theorem isCoarsening_eqToHom {X Y : K} (h : X = Y) : IsCoarsening (eqToHom h) := by
+  subst h; simpa using IsCoarsening.id X
+
+/-- The canonical comparison of equal **labelled** objects is a coarsening. -/
+theorem isCoarsening_labEqToHom {A B : LabObj.{u, v, w, u₂, v₂} n K C} (h : A = B) :
+    IsCoarsening (eqToHom h).1 := by
+  subst h; simpa using IsCoarsening.id A.obj
+
+/-- **Source: `prop:draft-terminal-factors` (2) (§5.2).**  A normalising coarsening stays
+normalising after any further coarsening.  (The further
+coarsening is then automatically invertible, by `C10` and `C07`; this is the packaged form
+used to read off normality of a factor.) -/
+theorem IsNormalising.comp_isCoarsening {A B D : LabObj.{u, v, w, u₂, v₂} n K C} {q : A ⟶ B}
+    (hq : IsNormalising q) {e : B ⟶ D} (he : IsCoarsening e.1) : IsNormalising (q ≫ e) := by
+  refine ⟨hq.1.comp he, fun U r hr => ?_⟩
+  obtain ⟨k, hk, hqk⟩ := hq.exists_mediator r hr
+  refine ⟨k ≫ e, ⟨hk.comp he, by rw [← Category.assoc, ← hqk]⟩, fun mm hmm => ?_⟩
+  refine IsNormalising.mediator_unique hr (m := mm) (m' := k ≫ e) ?_
+  rw [← hmm.2, ← Category.assoc, ← hqk]
+
+/-- The underlying morphism of the canonical comparison of equal labelled objects. -/
+@[simp] theorem LabObj.eqToHom_coe {A B : LabObj.{u, v, w, u₂, v₂} n K C} (h : A = B) :
+    (eqToHom h : A ⟶ B).1 = eqToHom (congrArg LabObj.obj h) := by
+  subst h; simp
+
+
+
+
+
+/-- Normalisation transports along equalities of labelled objects. -/
+theorem isNormalising_congr {A A' B B' : LabObj.{u, v, w, u₂, v₂} n K C} (hA : A = A')
+    (hB : B = B') {q : A ⟶ B} {q' : A' ⟶ B'} (hq : IsNormalising q) (h : HEq q.1 q'.1) :
+    IsNormalising q' := by
+  subst hA; subst hB
+  have hqq : q = q' := Subtype.ext (eq_of_heq h)
+  exact hqq ▸ hq
+
+
+
+/-! ### Normalising coarsenings are the terminal objects of `OutCoarse(X, L)` -/
+
+/-- **Source: `def:draft-normalising` (§5.2), categorical form.**  A labelled coarsening is
+normalising exactly when it is a terminal object of the (thin) category `OutCoarse(X, L)`,
+in Mathlib's sense of `Limits.IsTerminal`.  Uniqueness of mediators is thinness. -/
+theorem LabOutCoarse.isNormalising_iff_nonempty_isTerminal {A : LabObj.{u, v, w, u₂, v₂} n K C}
+    (r : LabOutCoarse A) : IsNormalising r.map ↔ Nonempty (Limits.IsTerminal r) := by
+  constructor
+  · intro h
+    refine ⟨Limits.IsTerminal.ofUniqueHom (fun s => ?_) (fun _ _ => Subsingleton.elim _ _)⟩
+    exact ⟨(h.exists_mediator s.map s.isCoarsening).choose,
+      (h.exists_mediator s.map s.isCoarsening).choose_spec.1,
+      (h.exists_mediator s.map s.isCoarsening).choose_spec.2⟩
+  · rintro ⟨ht⟩
+    refine ⟨r.isCoarsening, fun D q hq => ?_⟩
+    let k := ht.from ⟨D, q, hq⟩
+    exact ⟨k.1, ⟨k.2.1, k.2.2⟩, fun m hm => IsNormalising.mediator_unique hq
+      (hm.2.symm.trans k.2.2)⟩
 
 end Truss.Transfer

@@ -1,10 +1,10 @@
 # Truss normalisation
 
-A standalone Lean 4 development of labelled open-truss normalisation, extracted
-from Yuhang Wei's transfer-report formalisation. Only `Truss.Transfer` is included;
-this repository does not contain the older `Truss.Normalization` library.
+A Lean 4 formalisation of the normalisation of labelled open truss bundles: Chapter 2 of Yuhang Wei's transfer
+report, *Framed combinatorial constructions for embedded PL manifolds*. It is extracted from a private repository;
+`SOURCE.json` records the revision and the hash of every file.
 
-## Build and check
+## Build
 
 Install [elan](https://github.com/leanprover/elan), then run:
 
@@ -14,43 +14,34 @@ lake build
 lake env lean CheckAxioms.lean
 ```
 
-Lean and Mathlib are pinned to **v4.28.0**. `lake-manifest.json` pins dependency
-commits. `SOURCE.json` records the source revision and SHA-256 of every exported
-proof file. The original copyright headers and Apache 2.0 licence are preserved.
+Lean and Mathlib are pinned to v4.28.0. `CheckAxioms.lean` fails if any theorem or definition in `Truss.Transfer`
+depends on an axiom other than `propext`, `Classical.choice` and `Quot.sound`. CI runs the build and this check on
+every push.
 
-## Reading guide
+## Main results
 
-Start with [`Truss/Transfer.lean`](Truss/Transfer.lean). The following links point
-to statements and proofs, not to an executable normaliser:
+Start at `Truss/Transfer.lean`. [`COVERAGE.md`](COVERAGE.md) lists the declarations for each result of the chapter;
+only Remark 2.49 has none.
 
-| Topic | Source / principal declarations |
-|---|---|
-| Poset coarsenings and label descent | [Descent](Truss/Transfer/Normalisation/Descent.lean): `label_descent`, `label_descent_unique` |
-| Normalisation as terminality | [Terminality](Truss/Transfer/Normalisation/Terminality.lean) |
-| Retained singular points | [Retained](Truss/Transfer/Normalisation/Retained.lean): `retOrderIso` |
-| Forward-stable families | [StableFamily](Truss/Transfer/Normalisation/StableFamily.lean) |
-| Bundle normalisation | [BundleNorm](Truss/Transfer/Normalisation/BundleNorm.lean) |
-| Successor criterion | [SuccNormalising](Truss/Transfer/Normalisation/SuccNormalising.lean): `succ_isNormalising_iff` |
-| Recursive normalisation and universal property | [RecursiveNorm](Truss/Transfer/Normalisation/RecursiveNorm.lean): `towerNormalise_isNormalising`, `towerNormalise_universal` |
-| Exact-typed theorem witnesses | [Chapter audit](Truss/Transfer/Audit/Chapter3.lean) |
-| Non-vacuity / diagnostic examples | [NonVacuity](Truss/Transfer/Audit/NonVacuity.lean), [OpenTrussProbe](Truss/Transfer/Audit/OpenTrussProbe.lean) |
+| Report | Declarations | Module |
+|---|---|---|
+| Proposition 2.6, descent of labels | `label_descent`, `label_descent_unique` | `Descent` |
+| Propositions 2.31 and 2.35, outgoing coarsenings as stable families | `OpenBundle.retOrderIso`, `OpenBundle.labelledRetOrderIso` | `BundleOrder` |
+| Proposition 2.44, top normalisation as a reflection | `reflection`, `lamFullyFaithful` | `TopReflection` |
+| Theorem 2.45, the inductive criterion | `succ_isNormalising_iff` | `SuccNormalising` |
+| Corollary 2.47, normality of tower layers | `normality_of_tower_layers` | `BlockNormality` |
+| Construction 2.48, recursive normalisation | `towerNormalise_isNormalising`, `towerNormalise_universal` | `RecursiveNorm` |
 
-## Scope and limitations
+## Conventions
 
-A successful build checks the **formal statements in these files**. It does not
-certify the C++ implementation, the visualiser, or every sentence of the current
-manuscript. Definitions include `noncomputable` constructions; this is not an
-executable normalisation package.
+- Trusses are coordinate models: a 1-truss is a length and the dimension of its first element, and a bundle is a
+  functor into 1-truss bordisms. A comparison with the abstract definitions of the FCT book is not part of this
+  package, and neither is the C++ truss library.
+- Maps preserve labels by equality, as in the report's strict convention. The main theorems take any label category
+  with objects and morphisms in one universe, and do not assume the report's condition that it has no non-identity
+  automorphisms; `NoAut.lean` shows that this condition makes label comparisons unique.
+- The constructions are `noncomputable`: they are proved correct, not run.
+- Module names such as `Section55` and `Audit/Chapter3.lean`, and some docstrings, keep the numbering of an earlier
+  draft. Labels such as `thm:draft-successor-normalising` are those of the report's source.
 
-The code uses coordinate models of open trusses and equality of label functors.
-Read each declaration's hypotheses, including label-category assumptions, rather
-than transferring a theorem to a different interface by name alone.
-
-Some preserved module comments and audit row numbers refer to the September 2026
-draft. They are historical, not a claim about current chapter numbering or current
-coverage. In particular, a full current-manuscript correspondence review and
-construction-agreement bridges are **not supplied by this extraction**.
-
-`CheckAxioms.lean` rejects axioms outside `propext`, `Classical.choice`, and
-`Quot.sound` for every theorem in the `Truss.Transfer` namespace, including the
-chapter witnesses. CI rebuilds the package and runs this check independently.
+Released under Apache 2.0; see `LICENSE`.

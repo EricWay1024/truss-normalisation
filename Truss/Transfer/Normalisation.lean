@@ -4,12 +4,17 @@ Released under Apache 2.0 license as described in the file LICENSE.
 -/
 import Truss.Transfer.Normalisation.CoCylBij
 import Truss.Transfer.Normalisation.OneTruss
-import Truss.Transfer.Normalisation.OneTrussNorm
-import Truss.Transfer.Normalisation.BundleRetract
+import Truss.Transfer.Normalisation.OneTrussOrder
+import Truss.Transfer.Normalisation.BundleOrder
 import Truss.Transfer.Normalisation.Section54
 import Truss.Transfer.Normalisation.Section55
 import Truss.Transfer.Normalisation.StrictReps
-import Truss.Transfer.Normalisation.RecursiveNorm
+import Truss.Transfer.Normalisation.LayerNormality
+import Truss.Transfer.Normalisation.TowerBlocks
+import Truss.Transfer.Normalisation.IteratedClassifier
+import Truss.Transfer.Normalisation.BlockNormality
+import Truss.Transfer.Normalisation.SuccNormalisingDirect
+import Truss.Transfer.Normalisation.NoAutIteration
 import Truss.Transfer.Normalisation.Successor
 import Truss.Transfer.Normalisation.Terminality
 
@@ -21,12 +26,11 @@ draft normalisation chapter.  It contains no declarations of its own: it is a re
 [`plan/DraftNormalisationVerification.md`](../../plan/DraftNormalisationVerification.md) §7
 specifies.
 
-**Current coverage: §5.1, §5.2, §5.3, §5.4 and §5.5 are complete** — every statement of the
-draft chapter is proved, with no `sorry` and no chapter-specific axiom.  The chapter's
-**standing convention is a theorem** here, not a postulate: see `StrictReps.lean`.  The
-fibrewise characterisation that §5.4 and §5.5 are stated against is discharged
-unconditionally in `Section54.lean` and `Section55.lean`, so no result below carries it as
-a hypothesis.
+The retained-set and retained-family order isomorphisms, the reflection, the successor
+criteria, arbitrary middle-block normality and recursive correctness are exported here.
+Current per-label correspondence is recorded in `plan/CurrentChapterCoverage.md`.
+The cross-framework comparison remark and the bridge from coordinate towers to all
+intrinsic Chapter 2 objects/maps are not supplied by these modules.
 
 Existence theorems **are** asserted, and proved: `normaliseMap_isNormalising` for labelled
 open 1-trusses (§5.3) and `bundleNormaliseMap_isNormalising'` for labelled fibrewise-open

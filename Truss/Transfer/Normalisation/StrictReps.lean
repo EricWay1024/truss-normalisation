@@ -94,7 +94,7 @@ sense.
 The convention's two remaining ingredients are not assertions and are not discharged here:
 `C` is automorphism-free (a standing hypothesis; its consequence for label comparisons is
 `labelComparison_unique`), and the chosen models are skeletal (a modelling choice, already
-true of `OpenTruss` by `OpenTruss.skeletal`).  `prop:noaut-iteration` is a Chapter 2
-statement and is **OPEN**. -/
+true of `OpenTruss` by `OpenTruss.skeletal`).  `prop:noaut-iteration` is proved for this
+model in `NoAutIteration.lean` (`noAut_labOneTruss`, `noAut_iterLab`). -/
 
 end Truss.Transfer

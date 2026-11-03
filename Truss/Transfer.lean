@@ -24,8 +24,9 @@ construction-agreement bridge.  No such bridge exists yet.
 * `Truss.Transfer.Normalisation` — the chapter itself (rows `P01`–`P05`, `C01`–`C10`).
 * `Truss.Transfer.Audit` — the plan's §9 non-vacuity and diagnostic probes.
 
-Everything else is **OPEN**.  The per-row ledger, with source hashes, the reviewed source
-correspondence and the axiom evidence, is
-[`plan/DraftNormalisationCoverage.md`](../plan/DraftNormalisationCoverage.md); the frontier is
-[`plan/DraftNormalisationRunReport.md`](../plan/DraftNormalisationRunReport.md).
+Current source correspondence, including the literal outgoing order isomorphisms and the
+remaining middle-block and model-comparison gaps, is recorded in
+[`plan/CurrentChapterCoverage.md`](../plan/CurrentChapterCoverage.md). The earlier coverage
+ledger is a September source snapshot. The integration and current build/axiom evidence
+are in [`plan/NormalisationGapsRunReport.md`](../plan/NormalisationGapsRunReport.md).
 -/

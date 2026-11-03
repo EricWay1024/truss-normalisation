@@ -8,7 +8,10 @@ import Truss.Transfer.Normalisation.BundlePullback
 import Truss.Transfer.Normalisation.Fibrewise
 import Truss.Transfer.Normalisation.NoAut
 import Truss.Transfer.Normalisation.Classification
-import Truss.Transfer.Normalisation.RecursiveNorm
+import Truss.Transfer.Normalisation.LayerNormality
+import Truss.Transfer.Normalisation.BlockNormality
+import Truss.Transfer.Normalisation.OneTrussOrder
+import Truss.Transfer.Normalisation.BundleOrder
 
 /-!
 # Audit: exact-typed witnesses for the draft normalisation chapter
@@ -23,7 +26,7 @@ Witnesses are grouped by the plan's coverage IDs.  Rows that are still **OPEN** 
 the closing comment, not witnessed here — an audit module contains no new assumptions.
 -/
 
-universe u v
+universe u v w u₂ v₂
 
 namespace Truss.Transfer.Audit
 
@@ -353,18 +356,217 @@ theorem w_N06universal (T : Tower P m) (L : (towerTot P m T).carrier ⥤ C)
 
 end Section55Audit
 
+/-! ### Current chapter additions, reviewed 3 November 2026 -/
+
+section CurrentPoset
+
+variable {P : Type u} {Q : Type v} [PartialOrder P] [PartialOrder Q]
+
+/-- Current `lem:draft-poset-coarsening-basics` (1): object and arrow surjectivity. -/
+theorem w_current_poset_surjective {q : P →o Q} (hq : IsPosetCoarsening q) :
+    Function.Surjective q ∧ Function.Surjective (Arr.map q) :=
+  ⟨hq.surjective, hq.arr_surjective⟩
+
+/-- Current clause (3), in its stronger form requiring only openness. -/
+theorem w_current_open_chain {q : P →o Q} (hq : IsOpenPosetMap q) {n : ℕ}
+    (y : Fin (n + 1) → Q) (hy : Monotone y) (last : P)
+    (hlast : q last = y (Fin.last n)) :
+    ∃ x : Fin (n + 1) → P, Monotone x ∧ x (Fin.last n) = last ∧ ∀ i, q (x i) = y i :=
+  hq.exists_monotone_lift y hy last hlast
+
+/-- Current clause (3): every finite chain lifts with its prescribed final element. -/
+theorem w_current_coarsening_chain {q : P →o Q} (hq : IsPosetCoarsening q) {n : ℕ}
+    (y : Fin (n + 1) → Q) (hy : Monotone y) (last : P)
+    (hlast : q last = y (Fin.last n)) :
+    ∃ x : Fin (n + 1) → P, Monotone x ∧ x (Fin.last n) = last ∧ ∀ i, q (x i) = y i :=
+  hq.exists_monotone_lift y hy last hlast
+
+end CurrentPoset
+
+section CurrentLabelledOutgoing
+
+variable {n : ℕ} {K : Type u} [Category.{v} K] [TrussLike.{u, v, w} n K]
+variable {C : Type u₂} [Category.{v₂} C] {A : LabObj n K C}
+
+/-- Forgetting the uniquely descended target label is injective. -/
+theorem w_current_forget_injective :
+    Function.Injective (fun r : LabOutCoarse A =>
+      (⟨r.tgt.obj, r.map.1, r.isCoarsening⟩ : OutCoarse A.obj)) :=
+  LabOutCoarse.forgetObj_injective
+
+/-- The labelled factorisation order is the structural factorisation order. -/
+theorem w_current_labelled_mediator (r q : LabOutCoarse A) :
+    Nonempty (r ⟶ q) ↔
+      ∃ h : r.tgt.obj ⟶ q.tgt.obj, IsCoarsening h ∧ q.map.1 = r.map.1 ≫ h :=
+  LabOutCoarse.nonempty_hom_iff r q
+
+end CurrentLabelledOutgoing
+
+section CurrentOneTrussOrder
+
+variable {C : Type u} [Category.{v} C]
+
+/-- `prop:draft-labelled-outcoarse-1-truss-poset-iso`, as a literal order isomorphism. -/
+noncomputable def w_current_labelled_truss_iso (A : LabObj 1 OpenTruss C) :
+    OpenTruss.LabOutCoarsePoset A ≃o
+      {U : Finset (Fin A.obj.numSing) // NonTriv A.obj A.label ⊆ U}ᵒᵈ :=
+  OpenTruss.labelledRetOrderIso A
+
+/-- The source order of the labelled one-truss isomorphism is labelled factorisation. -/
+theorem w_current_labelled_truss_order (A : LabObj 1 OpenTruss C)
+    (r q : OpenTruss.LabOutCoarsePoset A) :
+    r ≤ q ↔ Nonempty (r.out ⟶ q.out) := OpenTruss.LabOutCoarsePoset.le_iff r q
+
+/-- The labelled one-truss map is the restriction of the unlabelled retained-set map. -/
+theorem w_current_labelled_truss_restriction (A : LabObj 1 OpenTruss C)
+    (r : OpenTruss.LabOutCoarsePoset A) :
+    (OrderDual.ofDual (OpenTruss.labelledRetOrderIso A r)).val =
+      OrderDual.ofDual (OpenTruss.retOrderIso A.obj
+        (OpenTruss.OutCoarsePoset.of r.out.forgetObj)) :=
+  OpenTruss.labelledRetOrderIso_forget A r
+
+end CurrentOneTrussOrder
+
+section CurrentBundleOrder
+
+variable {B : Type u} [PartialOrder B] [Finite B]
+variable {C : Type v} [Category.{w} C]
+
+/-- Equality of retained families determines the actual outgoing coarsening. -/
+theorem w_current_bundle_ext {A : OpenBundle B} {r s : OutCoarse A}
+    (h : OpenBundle.retFinset r.map = OpenBundle.retFinset s.map) : r = s :=
+  OpenBundle.outCoarse_ext h
+
+omit [Finite B] in
+/-- The two presentations of family inclusion agree. -/
+theorem w_current_bundle_retained_le {A Y Z : OpenBundle B} (r : A ⟶ Y) (q : A ⟶ Z) :
+    OpenBundle.retFinset q ≤ OpenBundle.retFinset r ↔
+      OpenBundle.retFam q ≤ OpenBundle.retFam r := OpenBundle.retFinset_le_iff r q
+
+/-- `prop:draft-outcoarse-1-bundle-poset-iso`, as a literal order isomorphism. -/
+noncomputable def w_current_bundle_iso (A : OpenBundle B) :
+    OpenBundle.OutCoarsePoset A ≃o
+      {U : ∀ b : B, Finset (Fin (A.fib b).numSing) // A.IsForwardStableFam U}ᵒᵈ :=
+  OpenBundle.retOrderIso A
+
+/-- The unlabelled bundle order is mediating-coarsening existence. -/
+theorem w_current_bundle_order (A : OpenBundle B) (r q : OpenBundle.OutCoarsePoset A) :
+    r ≤ q ↔ ∃ h : r.out.tgt ⟶ q.out.tgt,
+      IsCoarsening h ∧ q.out.map = r.out.map ≫ h := OpenBundle.OutCoarsePoset.le_iff r q
+
+/-- The bundle classification maps a coarsening to its actual retained family. -/
+theorem w_current_bundle_iso_apply (A : OpenBundle B) (r : OpenBundle.OutCoarsePoset A) :
+    (OrderDual.ofDual (OpenBundle.retOrderIso A r)).val = OpenBundle.retFinset r.out.map :=
+  OpenBundle.retOrderIso_apply A r
+
+/-- Its inverse is the actual canonical quotient map. -/
+theorem w_current_bundle_iso_symm (A : OpenBundle B)
+    (U : (OpenBundle.StableRetainedFamily A)ᵒᵈ) :
+    ((OpenBundle.retOrderIso A).symm U).out.map =
+      A.quotientMap (OrderDual.ofDual U).val (OrderDual.ofDual U).property :=
+  OpenBundle.retOrderIso_symm_map A U
+
+/-- Non-trivial labels are retained by a labelled bundle coarsening. -/
+theorem w_current_bundle_nontriv (A : LabObj 1 (OpenBundle B) C) (r : LabOutCoarse A) :
+    A.obj.nonTrivFam A.label ≤ fun b => (↑(OpenBundle.retFinset r.map.1 b) : Set _) :=
+  OpenBundle.nonTrivFam_le_retFinset r
+
+/-- `prop:draft-labelled-outcoarse-1-bundle-poset-iso`, with the inclusion bound explicit. -/
+noncomputable def w_current_labelled_bundle_iso (A : LabObj 1 (OpenBundle B) C) :
+    OpenBundle.LabOutCoarsePoset A ≃o
+      {U : OpenBundle.StableRetainedFamily A.obj //
+        A.obj.nonTrivFam A.label ≤ fun b =>
+          (↑(U.val b) : Set (Fin (A.obj.fib b).numSing))}ᵒᵈ :=
+  OpenBundle.labelledRetOrderIso A
+
+/-- The labelled bundle order is labelled factorisation. -/
+theorem w_current_labelled_bundle_order (A : LabObj 1 (OpenBundle B) C)
+    (r q : OpenBundle.LabOutCoarsePoset A) :
+    r ≤ q ↔ Nonempty (r.out ⟶ q.out) := OpenBundle.LabOutCoarsePoset.le_iff r q
+
+/-- The labelled bundle map restricts the unlabelled retained-family map. -/
+theorem w_current_labelled_bundle_restriction (A : LabObj 1 (OpenBundle B) C)
+    (r : OpenBundle.LabOutCoarsePoset A) :
+    (OrderDual.ofDual (OpenBundle.labelledRetOrderIso A r)).val =
+      OrderDual.ofDual (OpenBundle.retOrderIso A.obj
+        (OpenBundle.OutCoarsePoset.of r.out.forgetObj)) :=
+  OpenBundle.labelledRetOrderIso_forget A r
+
+end CurrentBundleOrder
+
+section CurrentLayerNormality
+
+variable {P : FPoset.{u}} {C : Type v} [Category.{v} C]
+
+/-- The alternative layer predicate's successor clause, with all labels explicit. -/
+theorem w_current_layers_succ {n : ℕ} (T : Tower P (n + 1))
+    (L : (towerTot P (n + 1) T).carrier ⥤ C) :
+    HasNormalLayers (n + 1) T L ↔
+      IsNormal (⟨T.top, L⟩ : LabObj 1 (OpenBundle (towerTot P n T.lower).carrier) C) ∧
+      IsNormal (⟨T.lower, OpenBundle.classify T.top L⟩ :
+        LabObj n (Tower P n) (LabOneTruss C)) ∧
+      HasNormalLayers n T.lower (OpenBundle.classify T.top L) := Iff.rfl
+
+/-- The iterated normality criterion; this does not state arbitrary middle-block normality. -/
+theorem w_current_layer_normality {n : ℕ} (T : Tower P n)
+    (L : (towerTot P n T).carrier ⥤ C) :
+    IsNormal (⟨T, L⟩ : LabObj n (Tower P n) C) ↔ HasNormalLayers n T L :=
+  isNormal_iff_hasNormalLayers n T L
+
+/-- The forward consequence exposes all individual layers and classified lower prefixes. -/
+theorem w_current_normal_layers {n : ℕ} (T : Tower P n)
+    (L : (towerTot P n T).carrier ⥤ C)
+    (h : IsNormal (⟨T, L⟩ : LabObj n (Tower P n) C)) : HasNormalLayers n T L :=
+  h.hasNormalLayers
+
+/-- Normality splits across an arbitrary cut, in both directions and in every label category. -/
+theorem w_current_blocks_iff (k j : ℕ) (T : Tower P (k + j))
+    (L : (towerTot P (k + j) T).carrier ⥤ C) :
+    letI := (iterLab C j).2
+    IsNormal (⟨T, L⟩ : LabObj (k + j) (Tower P (k + j)) C) ↔
+      IsNormal (⟨Tower.suffix k j T, Tower.suffixLabel k j T L⟩ :
+        LabObj j (Tower (towerTot P k (Tower.prefix k j T)) j) C) ∧
+      IsNormal (⟨Tower.prefix k j T,
+        towerClassify (Tower.suffix k j T) (Tower.suffixLabel k j T L)⟩ :
+        LabObj k (Tower P k) (iterLab C j).1) :=
+  isNormal_iff_blocks k j T L
+
+/-- `cor:draft-layer-normality`: the literal middle tower and lower classified tower.
+Both height and category transports are explicit; all zero heights are in scope. -/
+theorem w_current_middle_block_normality {n : ℕ} (T : Tower P n)
+    (L : (towerTot P n T).carrier ⥤ C) (j k : ℕ) (hjk : j + k ≤ n)
+    (hN : IsNormal (⟨T, L⟩ : LabObj n (Tower P n) C)) :
+    let r := n - j - k
+    let hheight : n = (k + j) + r := by omega
+    let T' := Tower.castHeight hheight T
+    let L' := Tower.castHeightLabel hheight T L
+    let S := Tower.prefix (k + j) r T'
+    letI := (iterLab C r).2
+    let U := towerClassify (Tower.suffix (k + j) r T')
+      (Tower.suffixLabel (k + j) r T' L')
+    let T_low := Tower.prefix k j S
+    let M := Tower.suffix k j S
+    let U_M := Tower.suffixLabel k j S U
+    letI := (iterLab C (n - k)).2
+    letI := (@iterLab (iterLab C r).1 (iterLab C r).2 j).2
+    let hCategory : @iterLab (iterLab C r).1 (iterLab C r).2 j = iterLab C (n - k) :=
+      (iterLab_add C r j).trans (congrArg (iterLab C) (by omega))
+    let V := (towerClassify M U_M).comp (categoryTransport hCategory)
+    IsNormal (⟨M, U_M⟩ : LabObj j (Tower (towerTot P k T_low) j) (iterLab C r).1) ∧
+      IsNormal (⟨T_low, V⟩ : LabObj k (Tower P k) (iterLab C (n - k)).1) :=
+  normality_of_tower_layers T L j k hjk hN
+
+end CurrentLayerNormality
+
 /-!
-## Rows deliberately **not** witnessed here
+## Specific source correspondence still missing
 
-Every row of §5.1–§5.5 is now **PROVED**; the rows without a witness above are witnessed
-by their own modules rather than restated here:
-
-* the chapter's standing gaunt/strict-representative convention (`StrictReps.standingConvention`);
-* §5.4's `B05`, `B09`, `B10` and the full `B11` (`Section54.lean`, unconditional);
-* §5.5's `N01` (the `TrussLike` instance on towers, `Tower.lean`).
-
-The remaining unwitnessed rows are Chapter 2's `G04`, `G08`–`G25`, which this chapter's
-results do **not** depend on.
+The arbitrary middle-block normality statement (`cor:draft-layer-normality`) is
+restated by `w_current_middle_block_normality`, including explicit category transports.
+The cross-framework comparison (`rem:draft-normalisation-comparison`) has no witness.
+The coordinate tower results still lack the intrinsic Chapter 2 object/map comparison.
+See `plan/CurrentChapterCoverage.md` for the current per-label correspondence; the
+September coverage ledger is a historical snapshot.
 -/
 
 end Truss.Transfer.Audit

@@ -1,7 +1,7 @@
 import Truss.Transfer
 import Lean.Util.CollectAxioms
 
-/-! Publication check: inspect the union of exported theorem dependencies once. -/
+/-! Check the axioms of every theorem and definition in `Truss.Transfer`. -/
 open Lean Elab Command in
 run_cmd do
   let env ← getEnv
@@ -9,15 +9,15 @@ run_cmd do
   let names := env.constants.toList.filterMap fun (name, info) =>
     if (`Truss.Transfer).isPrefixOf name || name.toString.startsWith "_private.Truss.Transfer." then
       match info with
-      | .thmInfo _ => some name
+      | .thmInfo _ | .defnInfo _ | .opaqueInfo _ => some name
       | _ => none
     else none
-  if names.isEmpty then throwError "No Transfer theorems found"
+  if names.isEmpty then throwError "No Transfer declarations found"
   -- Shared visited-set: calling collectAxioms separately would re-traverse Mathlib
   -- for every theorem. This uses the same kernel-environment dependency walker.
   let action : CollectAxioms.M Unit := names.forM CollectAxioms.collect
   let (_, state) := (action.run env).run {}
   for ax in state.axioms do
     unless allowed.contains ax do
-      throwError "Transfer theorem dependency contains unexpected axiom {ax}"
-  logInfo m!"Checked {names.length} Transfer theorems; axioms: {state.axioms}"
+      throwError "Transfer dependency contains unexpected axiom {ax}"
+  logInfo m!"Checked {names.length} Transfer theorems and definitions; axioms: {state.axioms}"

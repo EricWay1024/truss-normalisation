@@ -24,9 +24,10 @@ proved here from `NoAut` alone, for an arbitrary source category.
 
 ## What is *not* proved here
 
-`prop:noaut-iteration` (automorphism-freeness is stable under iterating the labelled-truss
-construction) and the chapter's standing choice of gaunt skeletal representatives are
-separate obligations; neither is claimed.
+The chapter's standing choice of gaunt skeletal representatives is a separate obligation and
+is not claimed.  `prop:noaut-iteration` (automorphism-freeness is stable under iterating the
+labelled-truss construction) is proved downstream, in `NoAutIteration.lean`
+(`noAut_labOneTruss`, `noAut_iterLab`, 2026-09-26).
 -/
 
 universe u v u' v'
